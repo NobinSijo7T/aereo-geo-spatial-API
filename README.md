@@ -99,10 +99,14 @@ JSON/JSONB is used for geometry and properties so PostGIS is not required. Origi
 
 The file details workspace now includes:
 
-- an interactive, monochrome SVG geometry view using backend-provided WGS 84 display coordinates;
+- an interactive MapLibre GL JS view using `@vis.gl/react-maplibre`, with polygon, line, and point GeoJSON layers, selection highlighting, fit/zoom/pan controls, scale, attribution, and a geometry-only fallback when the configured basemap is unavailable;
 - whole-dataset measurement analytics with area in m²/hectares/acres and length in metres/kilometres;
 - synchronized feature-table/map selection and an inspector for original GeoJSON, properties, CRS and status;
 - complete CSV export at `GET /api/files/{file_id}/export.csv`;
 - summary data at `GET /api/files/{file_id}/summary/` and feature diagnostics at `GET /api/files/{file_id}/diagnostics/`.
+- a complete CSV report action with progress and network-error feedback; the backend export includes all features, including failed, unsupported, and not-required records.
+- categorized diagnostics for validation, CRS, measurement, and unsupported-geometry conditions, with source and measurement CRS context where available.
 
-The authoritative area and length calculations remain in FastAPI. Original geometries are stored unchanged; display geometries are transformed to EPSG:4326 only for map rendering. The map intentionally does not depend on third-party tiles, so it remains useful in offline or restricted environments and shows a clear empty state when a source CRS cannot be converted.
+The authoritative area and length calculations remain in FastAPI. Original geometries are stored unchanged; display geometries are transformed to EPSG:4326 only for map rendering. The map intentionally does not depend on third-party tiles, so it remains useful in offline or restricted environments; it provides pan, zoom, fit, and selection controls and shows a clear empty state when a source CRS cannot be converted. Projected measurement CRSs are accepted only when their axis units are metric; geographic CRSs are converted to an estimated projected CRS before measurement.
+
+The frontend map uses `NEXT_PUBLIC_MAP_STYLE_URL`, defaulting in development to MapLibre's public demo style (`https://demotiles.maplibre.org/style.json`). Configure a production MapLibre-compatible style from a tile provider you have permission to use, and review that provider's attribution and usage limits. MapLibre's own stylesheet is bundled locally; no map-provider secret is exposed to the browser.

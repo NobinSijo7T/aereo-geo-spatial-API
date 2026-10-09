@@ -35,6 +35,17 @@ def test_kml_upload_metadata_measurements_and_pagination():
         assert len(second["features"]) == 1
         assert second["features"][0]["measurement"]["status"] == "not_required"
 
+        summary = client.get(f"/api/files/{file_id}/summary/")
+        assert summary.status_code == 200
+        assert summary.json()["total_features"] == 3
+        assert summary.json()["successful_measurements"] == 2
+        assert summary.json()["not_required_measurements"] == 1
+
+        export = client.get(f"/api/files/{file_id}/export.csv")
+        assert export.status_code == 200
+        assert export.text.count("\n") == 4  # header plus every feature, not only page one
+        assert "measurement_status" in export.text
+
 def test_upload_validation_errors():
     with TestClient(app) as client:
         assert client.post("/api/files/", files={"file": ("data.txt", b"hello", "text/plain")}).status_code == 400

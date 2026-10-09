@@ -15,6 +15,16 @@ from fastapi.responses import StreamingResponse
 
 router = APIRouter(prefix="/api/files", tags=["files"])
 
+def diagnostic_category(status: str, error: str | None) -> str:
+    if status == "not_supported":
+        return "unsupported_geometry"
+    message = (error or "").lower()
+    if "crs" in message or "projection" in message or "linear units" in message:
+        return "crs"
+    if "empty" in message or "invalid" in message:
+        return "validation"
+    return "measurement"
+
 def feature_response(item):
     measurement = item.measurement
     display = None
@@ -85,7 +95,7 @@ async def get_summary(file_id: uuid.UUID, db: Session = Depends(get_db)):
 async def get_diagnostics(file_id: uuid.UUID, db: Session = Depends(get_db)):
     if not get_file(db, file_id):
         raise HTTPException(404, "File not found")
-    return [DiagnosticResponse(feature_index=item.feature_index, geometry_type=item.geometry_type, status=item.measurement.status, error=item.measurement.error_message) for item in all_features(db, file_id) if item.measurement.status in {"error", "not_supported"}]
+    return [DiagnosticResponse(feature_index=item.feature_index, geometry_type=item.geometry_type, status=item.measurement.status, category=diagnostic_category(item.measurement.status, item.measurement.error_message), error=item.measurement.error_message, source_crs=item.source_crs, measurement_crs=feature_response(item).measurement_crs) for item in all_features(db, file_id) if item.measurement.status in {"error", "not_supported"}]
 
 @router.get("/{file_id}/export.csv")
 async def export_csv(file_id: uuid.UUID, db: Session = Depends(get_db)):

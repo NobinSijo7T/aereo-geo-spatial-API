@@ -40,7 +40,7 @@ export interface SummaryRecord {
   measurement_crs: string[];
 }
 
-export interface DiagnosticRecord { feature_index: number; geometry_type: string; status: string; error: string | null; }
+export interface DiagnosticRecord { feature_index: number; geometry_type: string; status: string; category: string; error: string | null; source_crs: string | null; measurement_crs: string | null; }
 
 export interface MeasurementPage {
   file_id: string;
@@ -50,24 +50,36 @@ export interface MeasurementPage {
   total: number;
 }
 
-const baseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+const configuredBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+const defaultHost = typeof window === "undefined" ? "127.0.0.1" : window.location.hostname;
+const apiBaseUrls = Array.from(new Set([
+  configuredBaseUrl,
+  `http://${defaultHost}:8000`,
+  `http://${defaultHost}:8001`,
+])).filter(Boolean);
+const baseUrl = apiBaseUrls[0] || `http://${defaultHost}:8000`;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  let response: Response;
-  try {
-    response = await fetch(`${baseUrl}${path}`, init);
-  } catch {
-    throw new Error(`Could not reach the API at ${baseUrl}. Start FastAPI and check NEXT_PUBLIC_API_BASE_URL.`);
-  }
-  if (!response.ok) {
-    let detail = `Request failed (${response.status})`;
+  let lastNetworkError: unknown;
+  for (const apiBaseUrl of apiBaseUrls) {
     try {
-      const payload = await response.json() as { detail?: string };
-      if (payload.detail) detail = payload.detail;
-    } catch { /* Keep the HTTP fallback. */ }
-    throw new Error(detail);
+      const response = await fetch(`${apiBaseUrl}${path}`, init);
+      if (!response.ok) {
+        let detail = `Request failed (${response.status})`;
+        try {
+          const payload = await response.json() as { detail?: string };
+          if (payload.detail) detail = payload.detail;
+        } catch { /* Keep the HTTP fallback. */ }
+        throw new Error(detail);
+      }
+      return response.json() as Promise<T>;
+    } catch (caught) {
+      if (caught instanceof Error && !caught.message.includes("Failed to fetch") && !caught.message.includes("NetworkError")) throw caught;
+      lastNetworkError = caught;
+    }
   }
-  return response.json() as Promise<T>;
+  void lastNetworkError;
+  throw new Error(`Could not reach the API on ports 8000 or 8001. Start FastAPI and check NEXT_PUBLIC_API_BASE_URL.`);
 }
 
 export function uploadFile(file: File, signal?: AbortSignal) {
@@ -87,5 +99,18 @@ export function getMeasurements(id: string, page: number, pageSize: number, sign
 export function getSummary(id: string, signal?: AbortSignal) { return request<SummaryRecord>(`/api/files/${encodeURIComponent(id)}/summary/`, { signal, cache: "no-store" }); }
 export function getDiagnostics(id: string, signal?: AbortSignal) { return request<DiagnosticRecord[]>(`/api/files/${encodeURIComponent(id)}/diagnostics/`, { signal, cache: "no-store" }); }
 export function exportUrl(id: string) { return `${baseUrl}/api/files/${encodeURIComponent(id)}/export.csv`; }
+
+export async function downloadCsv(id: string, signal?: AbortSignal) {
+  for (const apiBaseUrl of apiBaseUrls) {
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/files/${encodeURIComponent(id)}/export.csv`, { signal });
+      if (!response.ok) throw new Error(`Export failed (${response.status})`);
+      return response.blob();
+    } catch (caught) {
+      if (caught instanceof Error && !caught.message.includes("Failed to fetch") && !caught.message.includes("NetworkError")) throw caught;
+    }
+  }
+  throw new Error("Could not reach the API on ports 8000 or 8001. Start FastAPI and check NEXT_PUBLIC_API_BASE_URL.");
+}
 
 export { baseUrl };

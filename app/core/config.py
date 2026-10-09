@@ -8,7 +8,14 @@ class Settings(BaseSettings):
     supabase_storage_bucket: str = "geospatial-uploads"
     max_upload_size_bytes: int = 50 * 1024 * 1024
     sql_echo: bool = False
-    frontend_origins: str = "http://localhost:3000"
+    frontend_origins: str = ",".join(
+        [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:3001",
+        ]
+    )
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 @lru_cache

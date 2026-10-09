@@ -20,3 +20,7 @@ def test_missing_crs_is_an_explicit_error():
     assert result["status"] == "error"
     assert "CRS" in result["error"]
 
+def test_projected_crs_with_non_metric_units_is_rejected():
+    result = measure(LineString([(0, 0), (1, 1)]), "LineString", "EPSG:2277")
+    assert result["status"] == "error"
+    assert "linear units" in result["error"]

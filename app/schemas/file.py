@@ -49,4 +49,7 @@ class DiagnosticResponse(BaseModel):
     feature_index: int
     geometry_type: str
     status: str
+    category: str
     error: str | None
+    source_crs: str | None = None
+    measurement_crs: str | None = None

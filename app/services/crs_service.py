@@ -5,6 +5,9 @@ def measurement_crs(frame):
     if frame.crs is None:
         raise ValueError("Source CRS is missing or unusable")
     if frame.crs.is_projected:
+        units = {str(axis.unit_name).lower() for axis in frame.crs.axis_info if axis.unit_name}
+        if units and not any(unit in {"metre", "meter", "metres", "meters"} for unit in units):
+            raise ValueError(f"Source CRS uses unsupported linear units: {', '.join(sorted(units))}")
         return frame.crs
     estimated = frame.estimate_utm_crs()
     if estimated is None or not estimated.is_projected:
