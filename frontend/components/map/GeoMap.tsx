@@ -3,14 +3,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Maximize2, Minus, Plus, X } from "lucide-react";
 import Map, { AttributionControl, Layer, NavigationControl, ScaleControl, Source, type MapLayerMouseEvent, type MapRef } from "@vis.gl/react-maplibre";
-import { LngLatBounds, type CircleLayerSpecification, type FillLayerSpecification, type LineLayerSpecification, type StyleSpecification } from "maplibre-gl";
+import { LngLatBounds, type CircleLayerSpecification, type ErrorEvent, type FillLayerSpecification, type LineLayerSpecification, type StyleSpecification } from "maplibre-gl";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import type { FeatureRecord } from "@/lib/api";
 
-const polygonFill: FillLayerSpecification = { id: "geometry-polygon-fill", type: "fill", source: "uploaded-geometry", filter: ["in", ["geometry-type"], "Polygon", "MultiPolygon"] as never, paint: { "fill-color": "#000000", "fill-opacity": 0.08 } };
-const polygonOutline: LineLayerSpecification = { id: "geometry-polygon-outline", type: "line", source: "uploaded-geometry", filter: ["in", ["geometry-type"], "Polygon", "MultiPolygon"] as never, paint: { "line-color": "#000000", "line-width": 1.2, "line-opacity": 0.7 } };
-const lineLayer: LineLayerSpecification = { id: "geometry-lines", type: "line", source: "uploaded-geometry", filter: ["in", ["geometry-type"], "LineString", "MultiLineString"] as never, paint: { "line-color": "#000000", "line-width": 1.5, "line-opacity": 0.78 } };
-const pointLayer: CircleLayerSpecification = { id: "geometry-points", type: "circle", source: "uploaded-geometry", filter: ["in", ["geometry-type"], "Point", "MultiPoint"] as never, paint: { "circle-color": "#000000", "circle-radius": 4, "circle-stroke-color": "#ffffff", "circle-stroke-width": 1.2 } };
+function geometryTypeFilter(types: string[]) { return ["any", ...types.map((type) => ["==", ["geometry-type"], type])] as never; }
+
+const polygonFill: FillLayerSpecification = { id: "geometry-polygon-fill", type: "fill", source: "uploaded-geometry", filter: geometryTypeFilter(["Polygon", "MultiPolygon"]), paint: { "fill-color": "#000000", "fill-opacity": 0.08 } };
+const polygonOutline: LineLayerSpecification = { id: "geometry-polygon-outline", type: "line", source: "uploaded-geometry", filter: geometryTypeFilter(["Polygon", "MultiPolygon"]), paint: { "line-color": "#000000", "line-width": 1.2, "line-opacity": 0.7 } };
+const lineLayer: LineLayerSpecification = { id: "geometry-lines", type: "line", source: "uploaded-geometry", filter: geometryTypeFilter(["LineString", "MultiLineString"]), paint: { "line-color": "#000000", "line-width": 1.5, "line-opacity": 0.78 } };
+const pointLayer: CircleLayerSpecification = { id: "geometry-points", type: "circle", source: "uploaded-geometry", filter: geometryTypeFilter(["Point", "MultiPoint"]), paint: { "circle-color": "#000000", "circle-radius": 4, "circle-stroke-color": "#ffffff", "circle-stroke-width": 1.2 } };
 
 function isCoordinate(value: unknown): value is [number, number] { return Array.isArray(value) && Number.isFinite(value[0]) && Number.isFinite(value[1]) && Math.abs(value[0]) <= 180 && Math.abs(value[1]) <= 90; }
 
@@ -37,7 +39,7 @@ function boundsFor(collection: FeatureCollection): LngLatBounds | null {
   return bounds;
 }
 
-function selectedFilter(types: string[], featureIndex: number | null) { return ["all", ["in", ["geometry-type"], ...types], ["==", ["get", "featureIndex"], featureIndex ?? -1]] as never; }
+function selectedFilter(types: string[], featureIndex: number | null) { return ["all", geometryTypeFilter(types), ["==", ["get", "featureIndex"], featureIndex ?? -1]] as never; }
 
 export function GeoMap({ features, selected, onSelect }: { features: FeatureRecord[]; selected: number | null; onSelect: (index: number | null) => void }) {
   const mapRef = useRef<MapRef>(null);
@@ -63,11 +65,13 @@ export function GeoMap({ features, selected, onSelect }: { features: FeatureReco
   useEffect(() => { if (usingFallback) fit(); }, [usingFallback, fit]);
 
   function handleClick(event: MapLayerMouseEvent) { const featureIndex = event.features?.[0]?.properties?.featureIndex; onSelect(featureIndex == null ? null : Number(featureIndex)); }
-  function handleError() {
+  function handleError(event: ErrorEvent) {
     if (fallbackAttempted.current) return;
     fallbackAttempted.current = true;
+    const message = event.error?.message || "Unknown MapLibre resource error.";
+    console.error("[GeoMap] MapLibre resource error:", message);
     queueMicrotask(() => {
-      setStyleError("The configured basemap could not be loaded. Geometry remains available without map tiles.");
+      setStyleError(`Basemap resource failed: ${message} Geometry remains available without map tiles.`);
       setUsingFallback(true);
       setMapStyle(fallbackStyle);
     });
