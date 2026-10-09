@@ -15,6 +15,28 @@ uvicorn app.main:app --reload
 pytest
 ```
 
+## Railway deployment with Docker
+
+The repository includes a root `Dockerfile`, `.dockerignore`, and `railway.toml`. Railway detects the Dockerfile, runs `alembic upgrade head` as a pre-deploy command, and checks `/health` before activating a deployment. Railway injects `PORT`; the container listens on it automatically.
+
+1. Push this repository to GitHub and create a Railway project from the repository.
+2. Add the variables below in the Railway service. Do not commit real secret values.
+3. Deploy. Generate a Railway public domain under the service Networking settings.
+
+Required Railway variables:
+
+```text
+DATABASE_URL=postgresql+psycopg://...
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SECRET_KEY=your-server-only-secret-key
+SUPABASE_STORAGE_BUCKET=geospatial-uploads
+MAX_UPLOAD_SIZE_BYTES=52428800
+```
+
+Use a Supabase PostgreSQL connection string that is reachable from Railway. Supabase Storage remains the upload store; the local `.storage` fallback is for development only. Railway's pre-deploy migration command requires the database to be reachable and the database user to have schema migration permissions.
+
+After deployment, verify `https://YOUR-RAILWAY-DOMAIN/health` and open `https://YOUR-RAILWAY-DOMAIN/docs` for Swagger UI. Railway's Dockerfile detection and `PORT`/healthcheck behavior are documented in the [Railway Dockerfile guide](https://docs.railway.com/builds/dockerfiles) and [healthcheck guide](https://docs.railway.com/deployments/healthchecks).
+
 Create a Supabase project, copy its PostgreSQL connection string into `DATABASE_URL` (use the pooled connection for serverless/high-concurrency deployments), create a private bucket named by `SUPABASE_STORAGE_BUCKET`, and use the secret/server key only in the backend environment. Run `alembic upgrade head` against that database.
 
 ## API
@@ -42,4 +64,3 @@ The application validates extension, size, archive paths, Shapefile components, 
 ## Design decisions and future scope
 
 JSON/JSONB is used for geometry and properties so PostGIS is not required. Original geometries are never overwritten and invalid geometries are never silently repaired. Future improvements include background processing, authentication, rate limiting, object cleanup compensation, richer projection selection for cross-zone datasets, and integration tests against an isolated Supabase project.
-
