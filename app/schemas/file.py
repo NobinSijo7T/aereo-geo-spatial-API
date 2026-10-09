@@ -20,7 +20,9 @@ class FeatureResponse(BaseModel):
     feature_index: int
     geometry_type: str
     geometry: dict
+    display_geometry: dict | None = None
     crs: str | None
+    measurement_crs: str | None = None
     properties: dict
     measurement: MeasurementResponse
 
@@ -31,3 +33,20 @@ class MeasurementsResponse(BaseModel):
     page_size: int
     total: int
 
+class SummaryResponse(BaseModel):
+    total_features: int
+    geometry_counts: dict[str, int]
+    area_total_m2: float
+    length_total_m: float
+    successful_measurements: int
+    failed_measurements: int
+    unsupported_geometries: int
+    not_required_measurements: int
+    source_crs: str | None
+    measurement_crs: list[str]
+
+class DiagnosticResponse(BaseModel):
+    feature_index: int
+    geometry_type: str
+    status: str
+    error: str | None

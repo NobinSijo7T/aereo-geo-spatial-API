@@ -12,3 +12,5 @@ def get_features(db: Session, file_id, offset, limit):
 def feature_count(db: Session, file_id):
     return db.scalar(select(func.count()).select_from(Feature).where(Feature.file_id == file_id)) or 0
 
+def all_features(db: Session, file_id):
+    return list(db.scalars(select(Feature).options(joinedload(Feature.measurement)).where(Feature.file_id == file_id).order_by(Feature.feature_index)))

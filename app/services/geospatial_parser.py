@@ -5,7 +5,11 @@ ALLOWED = {".kml", ".zip"}
 
 def _safe_zip(data: bytes) -> Path:
     root = Path(tempfile.mkdtemp(prefix="geo-upload-"))
-    with zipfile.ZipFile(io.BytesIO(data)) as zf:
+    try:
+        zf = zipfile.ZipFile(io.BytesIO(data))
+    except zipfile.BadZipFile as exc:
+        raise ValueError("Uploaded ZIP archive is malformed") from exc
+    with zf:
         names = [n for n in zf.namelist() if not n.endswith("/")]
         if any(Path(n).is_absolute() or ".." in Path(n).parts for n in names):
             raise ValueError("Archive contains unsafe paths")

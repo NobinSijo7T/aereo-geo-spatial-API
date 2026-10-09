@@ -16,3 +16,19 @@ def projected_geometry(geometry, source_crs):
     frame = gpd.GeoDataFrame({"geometry": [geometry]}, crs=source_crs)
     target = measurement_crs(frame)
     return frame.to_crs(target).geometry.iloc[0]
+
+def display_geometry(geometry, source_crs):
+    import geopandas as gpd
+    if geometry is None or geometry.is_empty:
+        return geometry
+    if source_crs is None:
+        raise ValueError("Source CRS is missing or unusable")
+    frame = gpd.GeoDataFrame({"geometry": [geometry]}, crs=source_crs)
+    return frame.to_crs("EPSG:4326").geometry.iloc[0]
+
+def measurement_crs_text(geometry, source_crs):
+    import geopandas as gpd
+    if source_crs is None:
+        return None
+    frame = gpd.GeoDataFrame({"geometry": [geometry]}, crs=source_crs)
+    return measurement_crs(frame).to_string()
