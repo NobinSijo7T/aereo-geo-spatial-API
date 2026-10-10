@@ -1,4 +1,4 @@
-# Geospatial Measurement Studio
+# Geo Studio
 
 <p align="center">
   <a href="https://geo-spatial-hub-seven.vercel.app/">
@@ -7,11 +7,15 @@
 </p>
 
 <p align="center">
-  <a href="https://geo-spatial-hub-seven.vercel.app/">Open the live frontend</a>
-  ·
-  <a href="https://aereo-geo-spatial-api-production.up.railway.app/">Open the live API</a>
-  ·
-  <a href="https://aereo-geo-spatial-api-production.up.railway.app/docs">API documentation</a>
+  <a href="https://geo-spatial-hub-seven.vercel.app/">
+    <img src="https://img.shields.io/badge/Live%20Frontend-Open%20Geo%20Studio-d9ff5b?style=for-the-badge&logo=vercel&logoColor=white&labelColor=171717" alt="Open live frontend">
+  </a>
+  <a href="https://aereo-geo-spatial-api-production.up.railway.app/">
+    <img src="https://img.shields.io/badge/Live%20API-Open%20API-3ECF8E?style=for-the-badge&logo=railway&logoColor=white&labelColor=171717" alt="Open live API">
+  </a>
+  <a href="https://aereo-geo-spatial-api-production.up.railway.app/docs">
+    <img src="https://img.shields.io/badge/API%20Docs-Swagger%20UI-009688?style=for-the-badge&logo=fastapi&logoColor=white&labelColor=171717" alt="Open API documentation">
+  </a>
 </p>
 
 Upload a KML file or a ZIP archive containing one Shapefile dataset, inspect its CRS and properties, and review backend-verified area and length measurements on an interactive map.
@@ -166,9 +170,9 @@ The repository includes `Dockerfile`, `.dockerignore`, and `railway.toml` for Ra
 
 Live deployments:
 
-- Frontend: [geo-spatial-hub-seven.vercel.app](https://geo-spatial-hub-seven.vercel.app/)
-- API: [aereo-geo-spatial-api-production.up.railway.app](https://aereo-geo-spatial-api-production.up.railway.app/)
-- API docs: [Swagger UI](https://aereo-geo-spatial-api-production.up.railway.app/docs)
+- [Live Frontend](https://geo-spatial-hub-seven.vercel.app/)
+- [Live API](https://aereo-geo-spatial-api-production.up.railway.app/)
+- [API Docs](https://aereo-geo-spatial-api-production.up.railway.app/docs)
 
 Required production variables include:
 
