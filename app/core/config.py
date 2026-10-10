@@ -4,7 +4,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     database_url: str = "sqlite+pysqlite:///./geospatial.db"
     supabase_url: str | None = None
+    supabase_publishable_key: str | None = None
     supabase_secret_key: str | None = None
+    supabase_jwks_url: str | None = None
     supabase_storage_bucket: str = "geospatial-uploads"
     max_upload_size_bytes: int = 50 * 1024 * 1024
     sql_echo: bool = False
