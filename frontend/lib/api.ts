@@ -53,11 +53,11 @@ export interface MeasurementPage {
 const configuredBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
 const productionApiUrl = "https://aereo-geo-spatial-api-production.up.railway.app";
 const defaultHost = typeof window === "undefined" ? "127.0.0.1" : window.location.hostname;
+const isLocalBrowser = typeof window !== "undefined" && ["localhost", "127.0.0.1"].includes(window.location.hostname);
 const apiBaseUrls = Array.from(new Set([
   configuredBaseUrl,
   productionApiUrl,
-  `http://${defaultHost}:8000`,
-  `http://${defaultHost}:8001`,
+  ...(isLocalBrowser || typeof window === "undefined" ? [`http://${defaultHost}:8000`, `http://${defaultHost}:8001`] : []),
 ])).filter(Boolean);
 const baseUrl = apiBaseUrls[0] || `http://${defaultHost}:8000`;
 
