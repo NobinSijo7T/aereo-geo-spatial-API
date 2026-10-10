@@ -1,5 +1,19 @@
 # Geospatial Measurement Studio
 
+<p align="center">
+  <a href="https://geo-spatial-hub-seven.vercel.app/">
+    <img src="frontend/app/icon.svg" alt="Geo Studio logo" width="96" height="96">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://geo-spatial-hub-seven.vercel.app/">Open the live frontend</a>
+  ·
+  <a href="https://aereo-geo-spatial-api-production.up.railway.app/">Open the live API</a>
+  ·
+  <a href="https://aereo-geo-spatial-api-production.up.railway.app/docs">API documentation</a>
+</p>
+
 Upload a KML file or a ZIP archive containing one Shapefile dataset, inspect its CRS and properties, and review backend-verified area and length measurements on an interactive map.
 
 The FastAPI backend is authoritative for parsing, CRS conversion, measurement, storage, and validation. The Next.js workspace presents those verified results without reimplementing geospatial processing in the browser.
@@ -140,7 +154,7 @@ Backend settings are loaded from the root `.env` file. Frontend settings are loa
 
 ```env
 DATABASE_URL=sqlite+pysqlite:///./geospatial.db
-FRONTEND_ORIGINS=http://localhost:3000,http://localhost:3001
+FRONTEND_ORIGINS=http://localhost:3000,http://localhost:3001,https://geo-spatial-hub-seven.vercel.app
 MAX_UPLOAD_SIZE_BYTES=52428800
 ```
 
@@ -150,6 +164,12 @@ For production, use PostgreSQL and a private Supabase Storage bucket. Do not com
 
 The repository includes `Dockerfile`, `.dockerignore`, and `railway.toml` for Railway deployment. Railway runs the Alembic migration as a pre-deploy command, injects `PORT`, and checks `/health` before activation.
 
+Live deployments:
+
+- Frontend: [geo-spatial-hub-seven.vercel.app](https://geo-spatial-hub-seven.vercel.app/)
+- API: [aereo-geo-spatial-api-production.up.railway.app](https://aereo-geo-spatial-api-production.up.railway.app/)
+- API docs: [Swagger UI](https://aereo-geo-spatial-api-production.up.railway.app/docs)
+
 Required production variables include:
 
 ```text
@@ -158,6 +178,12 @@ SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SECRET_KEY=your-server-only-secret-key
 SUPABASE_STORAGE_BUCKET=geospatial-uploads
 MAX_UPLOAD_SIZE_BYTES=52428800
+```
+
+For the Vercel frontend, set:
+
+```text
+NEXT_PUBLIC_API_BASE_URL=https://aereo-geo-spatial-api-production.up.railway.app
 ```
 
 Original geometry is never silently overwritten or repaired. ZIP extraction rejects absolute paths, traversal paths, multiple Shapefile datasets, and missing `.shx`/`.dbf` components. Authentication, rate limiting, and asynchronous processing remain future scope.

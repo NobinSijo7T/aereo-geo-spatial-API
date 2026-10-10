@@ -51,9 +51,11 @@ export interface MeasurementPage {
 }
 
 const configuredBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+const productionApiUrl = "https://aereo-geo-spatial-api-production.up.railway.app";
 const defaultHost = typeof window === "undefined" ? "127.0.0.1" : window.location.hostname;
 const apiBaseUrls = Array.from(new Set([
   configuredBaseUrl,
+  productionApiUrl,
   `http://${defaultHost}:8000`,
   `http://${defaultHost}:8001`,
 ])).filter(Boolean);
@@ -79,7 +81,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     }
   }
   void lastNetworkError;
-  throw new Error(`Could not reach the API on ports 8000 or 8001. Start FastAPI and check NEXT_PUBLIC_API_BASE_URL.`);
+  throw new Error("Could not reach the API. Check NEXT_PUBLIC_API_BASE_URL or the Railway API deployment.");
 }
 
 export function uploadFile(file: File, signal?: AbortSignal) {
@@ -110,7 +112,7 @@ export async function downloadCsv(id: string, signal?: AbortSignal) {
       if (caught instanceof Error && !caught.message.includes("Failed to fetch") && !caught.message.includes("NetworkError")) throw caught;
     }
   }
-  throw new Error("Could not reach the API on ports 8000 or 8001. Start FastAPI and check NEXT_PUBLIC_API_BASE_URL.");
+  throw new Error("Could not reach the API. Check NEXT_PUBLIC_API_BASE_URL or the Railway API deployment.");
 }
 
 export { baseUrl };
