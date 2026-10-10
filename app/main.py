@@ -13,6 +13,15 @@ app.add_middleware(
 )
 app.include_router(router)
 
+@app.get("/")
+def root():
+    return {
+        "name": "Geo Studio API",
+        "status": "ok",
+        "health": "/health",
+        "docs": "/docs",
+    }
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
